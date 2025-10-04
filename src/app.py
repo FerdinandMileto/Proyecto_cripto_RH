@@ -10,6 +10,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score,root_mean_squared_error
 import plotly.express as px
 import plotly.graph_objects as go
+import joblib
 #primero vamos a armar el modelo y todas las funciones y luego la pagina
 
 import requests
@@ -20,10 +21,16 @@ data = requests.get(url).json()
 symbols = [s['symbol'] for s in data['symbols']]
 print(symbols[:20])  # mostrar los primeros 20
 
-monedas=[]
-for i in symbols:
-    if i[4:]=="USDT":
-        monedas.append(i[:4])
+monedas=[
+    "ETHUSDT",  # Ethereum
+    "BTCUSDT",  # Bitcoin  
+    "BNBUSDT",  # Binance Coin
+    "XRPUSDT",  # Ripple
+    "SOLUSDT",  # Solana
+    "ADAUSDT",  # Cardano
+    "LTCUSDT",  # Litecoin
+    "DOTUSDT",  # Polkadot
+]
 ############################################
 #
 
@@ -45,7 +52,7 @@ with tab1:
 with tab2:
     selected_crypto = st.selectbox("Criptomoneda:", monedas)
     
-    df=pd.read_csv("/home/rodrigo/Escritorio/Repositorios/Proyecto_cripto_RH/data/raw/df_cripto/"+(selected_crypto)+"USDT_1h_250days.csv")
+    df=pd.read_csv("/home/rodrigo/Escritorio/Repositorios/Proyecto_cripto_RH/data/raw/df_cripto/"+(selected_crypto)+"_1h_250days_porcentual.csv")
     #aqui va una elecion de que moneda se quiere predeciir junto con su modelo 
     grafico=pd.DataFrame({"fecha":df["open_time"],"precio":df["close"]})
     #grafico=grafico.set_index("fecha")
@@ -65,8 +72,18 @@ with tab2:
         title=f"Ultimos 250 dias de {selected_crypto}"
     )
 
+
+
+
+# Cargar modelo
+    @st.cache_resource  # para que no se recargue cada vez
+    def load_model(selected_cripto=selected_crypto):
+        return joblib.load("/home/rodrigo/Escritorio/Repositorios/Proyecto_cripto_RH/models/rand_forest_rf_"+(selected_cripto)+".pkl")
+
+    model = load_model()
+    
 # Mostrar en Streamlit
-st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True)
 
 # Mostrar en Streamlit
 
